@@ -1,0 +1,55 @@
+name: CI-CD
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependency dan test
+        run: |
+          pip install -r requirements.txt pytest
+          pytest -q
+
+      - name: Set nama image
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/crud-mahasiswa" >> $GITHUB_ENV
+
+      - name: Login ke GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build image dengan Podman
+        run: podman build -t $IMAGE:latest .
+
+      - name: Push image
+        run: podman push $IMAGE:latest
+
+  cd:
+    needs: ci
+    runs-on: self-hosted
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - name: Set nama image
+        run: |
+          $img = "ghcr.io/" + $env:GITHUB_REPOSITORY_OWNER.ToLower() + "/crud-mahasiswa"
+          "IMAGE=$img" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Deploy dengan Podman
+        run: |
+          podman pull "$($env:IMAGE):latest"
+          podman rm -f --ignore crud-app
+          podman run -d --name crud-app -p 8080:5000 -v dbdata:/data "$($env:IMAGE):latest"
+          podman ps
