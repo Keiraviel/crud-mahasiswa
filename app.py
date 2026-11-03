@@ -44,6 +44,12 @@ form.inline{display:inline}
 </head>
 <body>
 <h1>CRUD Data Mahasiswa</h1>
+<form method="get" action="/">
+  <input name="q" placeholder="Cari nama / NIM" value="{{ q }}">
+  <button type="submit">Cari</button>
+  {% if q %}<a href="/">Reset</a>{% endif %}
+</form>
+<p><b>Total data: {{ rows|length }}</b></p>
 <h3>{{ 'Ubah Data' if edit else 'Tambah Data' }}</h3>
 <form method="post" action="{{ url_for('ubah', id=edit['id']) if edit else url_for('tambah') }}">
   <input name="nim" placeholder="NIM" required value="{{ edit['nim'] if edit else '' }}">
@@ -85,12 +91,20 @@ def run(sql, params=()):
 def index():
     edit_id = request.args.get("edit")
     conn = get_db()
-    rows = conn.execute("SELECT * FROM mahasiswa ORDER BY id").fetchall()
+    q = request.args.get("q", "").strip()
+    if q:
+        like = "%" + q + "%"
+        rows = conn.execute(
+            "SELECT * FROM mahasiswa WHERE nama LIKE ? OR nim LIKE ? ORDER BY id",
+            (like, like),
+        ).fetchall()
+    else:
+        rows = conn.execute("SELECT * FROM mahasiswa ORDER BY id").fetchall()
     edit = None
     if edit_id:
         edit = conn.execute("SELECT * FROM mahasiswa WHERE id=?", (edit_id,)).fetchone()
     conn.close()
-    return render_template_string(PAGE, rows=rows, edit=edit)
+    return render_template_string(PAGE, rows=rows, edit=edit, q=q)
 
 
 @app.route("/tambah", methods=["POST"])

@@ -17,3 +17,13 @@ def test_crud():
     assert b"Budi Baru" in c.get("/").data
     c.post("/hapus/1")
     assert b"Budi Baru" not in c.get("/").data
+
+
+def test_cari():
+    c = app.test_client()
+    c.post("/tambah", data={"nim": "111", "nama": "Andi", "jurusan": "IF"})
+    c.post("/tambah", data={"nim": "222", "nama": "Siti", "jurusan": "SI"})
+    hasil = c.get("/?q=Siti").data
+    assert b"Siti" in hasil
+    assert b"Andi" not in hasil
+    assert b"Total data: 1" in hasil
