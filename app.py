@@ -31,50 +31,93 @@ PAGE = """
 <html lang="id">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CRUD Mahasiswa</title>
 <style>
-body{font-family:sans-serif;max-width:800px;margin:30px auto;padding:0 16px}
-table{width:100%;border-collapse:collapse;margin-top:16px}
-th,td{border:1px solid #ccc;padding:8px;text-align:left}
-th{background:#eee}
-input{padding:6px;margin:4px}
-button{padding:6px 12px;cursor:pointer}
-form.inline{display:inline}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Tahoma,sans-serif;background:#f1f5f9;color:#1e293b}
+header{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;padding:32px 16px;text-align:center}
+header h1{margin:0 0 6px;font-size:28px}
+header p{margin:0;opacity:.9}
+main{max-width:900px;margin:-24px auto 40px;padding:0 16px}
+.card{background:#fff;border-radius:14px;padding:20px;margin-bottom:20px;box-shadow:0 4px 14px rgba(15,23,42,.08)}
+.card h3{margin:0 0 14px;font-size:18px;color:#4f46e5}
+.row{display:flex;flex-wrap:wrap;gap:10px}
+input{flex:1;min-width:150px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:15px}
+input:focus{outline:none;border-color:#4f46e5;box-shadow:0 0 0 3px rgba(79,70,229,.15)}
+button,.btn{padding:10px 16px;border:0;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;color:#fff;text-decoration:none;display:inline-block}
+.primary{background:#4f46e5}.primary:hover{background:#4338ca}
+.warn{background:#f59e0b}.warn:hover{background:#d97706}
+.danger{background:#ef4444}.danger:hover{background:#dc2626}
+.ghost{background:#e2e8f0;color:#334155}
+.top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.badge{background:#e0e7ff;color:#4338ca;padding:6px 14px;border-radius:999px;font-weight:600;font-size:14px}
+.wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{background:#4f46e5;color:#fff;text-align:left;padding:12px;font-size:14px}
+th:first-child{border-radius:8px 0 0 8px}th:last-child{border-radius:0 8px 8px 0}
+td{padding:12px;border-bottom:1px solid #e2e8f0}
+tr:hover td{background:#f8fafc}
+.aksi{display:flex;gap:6px}
+form.inline{display:inline;margin:0}
+.kosong{text-align:center;color:#64748b;padding:28px}
+footer{text-align:center;color:#64748b;font-size:13px;padding-bottom:24px}
 </style>
 </head>
 <body>
-<h1>CRUD Data Mahasiswa</h1>
-<form method="get" action="/">
-  <input name="q" placeholder="Cari nama / NIM" value="{{ q }}">
-  <button type="submit">Cari</button>
-  {% if q %}<a href="/">Reset</a>{% endif %}
-</form>
-<p><b>Total data: {{ rows|length }}</b></p>
-<h3>{{ 'Ubah Data' if edit else 'Tambah Data' }}</h3>
-<form method="post" action="{{ url_for('ubah', id=edit['id']) if edit else url_for('tambah') }}">
-  <input name="nim" placeholder="NIM" required value="{{ edit['nim'] if edit else '' }}">
-  <input name="nama" placeholder="Nama" required value="{{ edit['nama'] if edit else '' }}">
-  <input name="jurusan" placeholder="Jurusan" required value="{{ edit['jurusan'] if edit else '' }}">
-  <button type="submit">{{ 'Simpan Perubahan' if edit else 'Tambah' }}</button>
-  {% if edit %}<a href="/">Batal</a>{% endif %}
-</form>
-<table>
-  <tr><th>ID</th><th>NIM</th><th>Nama</th><th>Jurusan</th><th>Aksi</th></tr>
-  {% for r in rows %}
-  <tr>
-    <td>{{ r['id'] }}</td><td>{{ r['nim'] }}</td><td>{{ r['nama'] }}</td><td>{{ r['jurusan'] }}</td>
-    <td>
-      <a href="/?edit={{ r['id'] }}">Ubah</a>
-      <form class="inline" method="post" action="{{ url_for('hapus', id=r['id']) }}"
-            onsubmit="return confirm('Yakin hapus?')">
-        <button type="submit">Hapus</button>
+<header>
+  <h1>CRUD Data Mahasiswa</h1>
+  <p>Aplikasi berjalan di dalam container Podman dengan CI/CD</p>
+</header>
+<main>
+  <div class="card">
+    <h3>{{ 'Ubah Data' if edit else 'Tambah Data' }}</h3>
+    <form method="post" action="{{ url_for('ubah', id=edit['id']) if edit else url_for('tambah') }}">
+      <div class="row">
+        <input name="nim" placeholder="NIM" required value="{{ edit['nim'] if edit else '' }}">
+        <input name="nama" placeholder="Nama" required value="{{ edit['nama'] if edit else '' }}">
+        <input name="jurusan" placeholder="Jurusan" required value="{{ edit['jurusan'] if edit else '' }}">
+        <button class="primary" type="submit">{{ 'Simpan Perubahan' if edit else 'Tambah' }}</button>
+        {% if edit %}<a class="btn ghost" href="/">Batal</a>{% endif %}
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="top">
+      <form method="get" action="/" style="flex:1">
+        <div class="row">
+          <input name="q" placeholder="Cari nama / NIM" value="{{ q }}">
+          <button class="primary" type="submit">Cari</button>
+          {% if q %}<a class="btn ghost" href="/">Reset</a>{% endif %}
+        </div>
       </form>
-    </td>
-  </tr>
-  {% else %}
-  <tr><td colspan="5">Belum ada data.</td></tr>
-  {% endfor %}
-</table>
+      <span class="badge">Total data: {{ rows|length }}</span>
+    </div>
+    <div class="wrap">
+      <table>
+        <tr><th>ID</th><th>NIM</th><th>Nama</th><th>Jurusan</th><th>Aksi</th></tr>
+        {% for r in rows %}
+        <tr>
+          <td>{{ r['id'] }}</td><td>{{ r['nim'] }}</td><td>{{ r['nama'] }}</td><td>{{ r['jurusan'] }}</td>
+          <td>
+            <div class="aksi">
+              <a class="btn warn" href="/?edit={{ r['id'] }}">Ubah</a>
+              <form class="inline" method="post" action="{{ url_for('hapus', id=r['id']) }}"
+                    onsubmit="return confirm('Yakin hapus?')">
+                <button class="danger" type="submit">Hapus</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td class="kosong" colspan="5">Belum ada data.</td></tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+</main>
+<footer>UTS Pengembangan dan Operasi - IF-B Pagi</footer>
 </body>
 </html>
 """
