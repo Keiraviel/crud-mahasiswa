@@ -60,12 +60,23 @@ td{padding:12px;border-bottom:1px solid #e2e8f0}
 tr:hover td{background:#f8fafc}
 .aksi{display:flex;gap:6px}
 form.inline{display:inline;margin:0}
+.logo{width:72px;height:72px;object-fit:contain;display:block;margin:0 auto 10px;border-radius:16px;background:rgba(255,255,255,.15);padding:8px}
+.avatar{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:#e0e7ff;color:#4338ca;font-weight:700;font-size:14px;margin-right:8px;vertical-align:middle}
 .kosong{text-align:center;color:#64748b;padding:28px}
 footer{text-align:center;color:#64748b;font-size:13px;padding-bottom:24px}
 </style>
 </head>
 <body>
 <header>
+  {% if logo %}
+  <img class="logo" src="{{ url_for('static', filename='logo.png') }}" alt="Logo">
+  {% else %}
+  <svg class="logo" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-label="Logo topi wisuda">
+    <polygon points="32,10 60,24 32,38 4,24" fill="#fff"/>
+    <path d="M16 32v12c0 6 32 6 32 0V32l-16 8z" fill="#fff" fill-opacity=".85"/>
+    <line x1="56" y1="26" x2="56" y2="44" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+  </svg>
+  {% endif %}
   <h1>CRUD Data Mahasiswa</h1>
   <p>Aplikasi berjalan di dalam container Podman dengan CI/CD</p>
 </header>
@@ -99,7 +110,7 @@ footer{text-align:center;color:#64748b;font-size:13px;padding-bottom:24px}
         <tr><th>ID</th><th>NIM</th><th>Nama</th><th>Jurusan</th><th>Aksi</th></tr>
         {% for r in rows %}
         <tr>
-          <td>{{ r['id'] }}</td><td>{{ r['nim'] }}</td><td>{{ r['nama'] }}</td><td>{{ r['jurusan'] }}</td>
+          <td>{{ r['id'] }}</td><td>{{ r['nim'] }}</td><td><span class="avatar">{{ r['nama'][:1]|upper }}</span>{{ r['nama'] }}</td><td>{{ r['jurusan'] }}</td>
           <td>
             <div class="aksi">
               <a class="btn warn" href="/?edit={{ r['id'] }}">Ubah</a>
@@ -130,6 +141,10 @@ def run(sql, params=()):
     conn.close()
 
 
+def logo_ada():
+    return os.path.exists(os.path.join(app.static_folder, "logo.png"))
+
+
 @app.route("/")
 def index():
     edit_id = request.args.get("edit")
@@ -147,7 +162,7 @@ def index():
     if edit_id:
         edit = conn.execute("SELECT * FROM mahasiswa WHERE id=?", (edit_id,)).fetchone()
     conn.close()
-    return render_template_string(PAGE, rows=rows, edit=edit, q=q)
+    return render_template_string(PAGE, rows=rows, edit=edit, q=q, logo=logo_ada())
 
 
 @app.route("/tambah", methods=["POST"])
