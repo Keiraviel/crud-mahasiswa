@@ -1,4 +1,4 @@
-import os
+﻿import os
 import sqlite3
 from flask import Flask, request, redirect, url_for, render_template_string
 
@@ -78,7 +78,7 @@ footer{text-align:center;color:#64748b;font-size:13px;padding-bottom:24px}
   </svg>
   {% endif %}
   <h1>CRUD Data Mahasiswa</h1>
-  <p>Aplikasi berjalan di dalam container Podman dengan CI/CD</p>
+  <p>Aplikasi berjalan di dalam container Podman dengan CI/CD v2</p>
 </header>
 <main>
   <div class="card">
