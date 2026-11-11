@@ -78,7 +78,7 @@ footer{text-align:center;color:#64748b;font-size:13px;padding-bottom:24px}
   </svg>
   {% endif %}
   <h1>CRUD Data Mahasiswa</h1>
-  <p>Aplikasi berjalan di dalam container Podman dengan CI/CD v2</p>
+  <p>UTS DEV OPS IF B PAGI</p>
 </header>
 <main>
   <div class="card">
