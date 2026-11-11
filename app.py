@@ -128,7 +128,7 @@ footer{text-align:center;color:#64748b;font-size:13px;padding-bottom:24px}
     </div>
   </div>
 </main>
-<footer>UTS Pengembangan dan Operasi - IF-B Pagi</footer>
+<footer>UTS Pengembangan dan Operasi - IF-B Pagi<br>Aplikasi Flask (container crud-app) diteruskan oleh Nginx (container crud-nginx) dalam satu pod Podman</footer>
 </body>
 </html>
 """

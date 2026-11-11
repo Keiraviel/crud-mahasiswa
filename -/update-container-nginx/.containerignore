@@ -1,0 +1,7 @@
+.git
+.github
+tests
+nginx
+actions-runner
+__pycache__
+*.db

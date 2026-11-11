@@ -24,16 +24,25 @@ jobs:
           pytest -q
 
       - name: Set nama image
-        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/crud-mahasiswa" >> $GITHUB_ENV
+        run: |
+          OWNER="${GITHUB_REPOSITORY_OWNER,,}"
+          echo "IMAGE=ghcr.io/${OWNER}/crud-mahasiswa" >> $GITHUB_ENV
+          echo "IMAGE_NGINX=ghcr.io/${OWNER}/crud-nginx" >> $GITHUB_ENV
 
       - name: Login ke GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Build image dengan Podman
+      - name: Build image aplikasi
         run: podman build -t $IMAGE:latest .
 
-      - name: Push image
+      - name: Build image nginx
+        run: podman build -t $IMAGE_NGINX:latest ./nginx
+
+      - name: Push image aplikasi
         run: podman push $IMAGE:latest
+
+      - name: Push image nginx
+        run: podman push $IMAGE_NGINX:latest
 
   cd:
     needs: ci
@@ -44,12 +53,29 @@ jobs:
     steps:
       - name: Set nama image
         run: |
-          $img = "ghcr.io/" + $env:GITHUB_REPOSITORY_OWNER.ToLower() + "/crud-mahasiswa"
-          "IMAGE=$img" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          $owner = $env:GITHUB_REPOSITORY_OWNER.ToLower()
+          "IMAGE=ghcr.io/$owner/crud-mahasiswa" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "IMAGE_NGINX=ghcr.io/$owner/crud-nginx" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
-      - name: Deploy dengan Podman
+      - name: Login ke GHCR (tidak wajib)
         run: |
+          "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
+          exit 0
+
+      - name: Deploy pod dengan Podman
+        run: |
+          $ErrorActionPreference = 'Continue'
           podman pull "$($env:IMAGE):latest"
+          if ($LASTEXITCODE -ne 0) { throw "Gagal pull image aplikasi" }
+          podman pull "$($env:IMAGE_NGINX):latest"
+          if ($LASTEXITCODE -ne 0) { throw "Gagal pull image nginx (ubah package crud-nginx menjadi Public)" }
           podman rm -f --ignore crud-app
-          podman run -d --name crud-app -p 8080:5000 -v dbdata:/data "$($env:IMAGE):latest"
-          podman ps
+          podman rm -f --ignore crud-nginx
+          podman pod rm -f --ignore crud-pod
+          podman pod create --name crud-pod -p 8080:80
+          if ($LASTEXITCODE -ne 0) { throw "Gagal membuat pod" }
+          podman run -d --pod crud-pod --name crud-app -v dbdata:/data "$($env:IMAGE):latest"
+          if ($LASTEXITCODE -ne 0) { throw "Gagal menjalankan container aplikasi" }
+          podman run -d --pod crud-pod --name crud-nginx "$($env:IMAGE_NGINX):latest"
+          if ($LASTEXITCODE -ne 0) { throw "Gagal menjalankan container nginx" }
+          podman ps --pod
